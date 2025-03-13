@@ -1,3 +1,5 @@
+import csv
+import pandas as pd
 from datetime import datetime
 
 # Bank class
@@ -18,12 +20,14 @@ class Customer:
 
     # Method to create an account
     def CreateAccount(self, bank: PyBank):
+
         self.AccountNumber = len(bank.Accounts) + 10001  # Unique account number
         bank.Accounts[self.AccountNumber] = Account(self.AccountNumber, self.InitialBalance)
         print(f'Account Created! --- Account Number: {self.AccountNumber}')
 
     # Display account details
     def AccountDetails(self, bank: PyBank):
+
         if self.AccountNumber in bank.Accounts:
             account = bank.Accounts[self.AccountNumber]
             print("\n==== ACCOUNT DETAILS ====")
@@ -37,10 +41,11 @@ class Customer:
 
 # Account class (stores balance and transaction history)
 class Account:
+
     def __init__(self, AccountNumber, Balance):
         self.AccountNumber = AccountNumber
         self.Balance = Balance
-        self.Transactions = []  # Store transaction history
+        self.Transactions = {'Account Number':None , 'Date & Time':None , 'Transaction Type':None , 'Amount': None}  # Store transaction history
 
     # Deposit function
     def deposit(self):
@@ -51,8 +56,13 @@ class Account:
                 return
             
             self.Balance += AMOUNT
-            self.Transactions.append(f'{datetime.now()} :: {self.AccountNumber} --- Deposited: {AMOUNT}')
+            # for Transaction details
+            self.Transactions['Account Number'] = self.AccountNumber
+            self.Transactions['Date & Time'] = datetime.now()
+            self.Transactions['Transaction Type'] = self.withdraw.__name__
+            self.Transactions['Amount'] = AMOUNT
             print(f'Amount Deposited! --- New Balance: {self.Balance}')
+    
         except ValueError:
             print("Invalid input! Please enter a numeric value.")
 
@@ -68,18 +78,25 @@ class Account:
                 return
 
             self.Balance -= AMOUNT
-            self.Transactions.append(f'{datetime.now()} :: {self.AccountNumber} --- Withdrawn: {AMOUNT}')
+
+            # for Transaction details
+            self.Transactions['Account Number'] = self.AccountNumber
+            self.Transactions['Date & Time'] = datetime.now()
+            self.Transactions['Transaction Type'] = self.withdraw.__name__
+            self.Transactions['Amount'] = AMOUNT
+
             print(f'Amount Withdrawn! --- New Balance: {self.Balance}')
         except ValueError:
             print("Invalid input! Please enter a numeric value.")
 
     # Display transaction history
     def DisplayTransactions(self):
+
         if not self.Transactions:
             print("No transactions yet.")
         else:
-            for trans in self.Transactions:
-                print(trans)
+            for key , values in self.Transactions.items():
+                print(f'{key} -- {values}')
 
 # ========== MAIN PROGRAM ==========
 bank = PyBank()
