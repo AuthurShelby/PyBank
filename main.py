@@ -1,4 +1,5 @@
 from datetime import datetime
+import csv
 
 # Bank class
 class PyBank:
@@ -6,6 +7,39 @@ class PyBank:
         self.name = 'PyBank'
         self.Accounts = {}  # Dictionary to store accounts (Account Number → Account Object)
         self.Customers = {}  # Dictionary to store customers (Account Number → Customer Object)
+        self.LoadAccountsFromCSV()  # Load existing accounts when the program starts
+        
+    # For account section 
+    def SaveAccountsToCSV(self):
+        with open('accounts.csv', mode='w', newline='') as file:
+            fieldnames = ["AccountNumber", "ClientName", "PhoneNumber", "Address", "EmailAddress", "Balance"]
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+            print(self.Customers.items())
+            for acc_num, cust in self.Customers.items():
+                account = self.Accounts[acc_num]
+                writer.writerow({
+                    "AccountNumber": acc_num,
+                    "ClientName": cust.ClientName,
+                    "PhoneNumber": cust.PhoneNumber,
+                    "Address": cust.Address,
+                    "EmailAddress": cust.EmailAddress,
+                    "Balance": account.Balance
+                })
+    # For Loading the account
+    def LoadAccountsFromCSV(self):
+        try:
+            with open('accounts.csv', mode='r') as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    customer = Customer(row["ClientName"], row["PhoneNumber"], row["Address"], row["EmailAddress"])
+                    customer.AccountNumber = int(row["AccountNumber"])
+                    account = Account(customer.AccountNumber, float(row["Balance"]))
+
+                    self.Customers[customer.AccountNumber] = customer
+                    self.Accounts[customer.AccountNumber] = account
+        except FileNotFoundError:
+            pass  # If no file exists, start fresh
 
 # Customer class (creates an account)
 class Customer:
@@ -19,9 +53,10 @@ class Customer:
 
     # Method to create an account
     def CreateAccount(self, bank: PyBank):
-        self.AccountNumber = len(bank.Accounts) + 10001  # Generate unique account number
+        self.AccountNumber = len(bank.Accounts) + 10010  # Generate unique account number
         bank.Accounts[self.AccountNumber] = Account(self.AccountNumber, self.InitialBalance)
         bank.Customers[self.AccountNumber] = self  # Store customer details
+        bank.SaveAccountsToCSV()  # Save new account to file
         print(f'\n Account Created! --- Account Number: {self.AccountNumber}\n')
 
     # Display account details
@@ -46,7 +81,7 @@ class Account:
         self.Transactions = []  # Store transaction history
 
     # Deposit function
-    def deposit(self):
+    def deposit(self, bank: PyBank):
         try:
             AMOUNT = float(input('Enter an amount to deposit: '))
             if AMOUNT <= 0:
@@ -55,12 +90,13 @@ class Account:
             
             self.Balance += AMOUNT
             self.Transactions.append(f'{datetime.now()} :: {self.AccountNumber} --- Deposited: {AMOUNT}')
+            bank.SaveAccountsToCSV()  # Save changes
             print(f' Amount Deposited! --- New Balance: {self.Balance}')
         except ValueError:
             print(" Invalid input! Please enter a numeric value.")
 
     # Withdraw function
-    def withdraw(self):
+    def withdraw(self, bank: PyBank):
         try:
             AMOUNT = float(input('Enter an amount to withdraw: '))
             if AMOUNT <= 0:
@@ -72,6 +108,7 @@ class Account:
 
             self.Balance -= AMOUNT
             self.Transactions.append(f'{datetime.now()} :: {self.AccountNumber} --- Withdrawn: {AMOUNT}')
+            bank.SaveAccountsToCSV()  # Save changes
             print(f' Amount Withdrawn! --- New Balance: {self.Balance}')
         except ValueError:
             print(" Invalid input! Please enter a numeric value.")
@@ -96,7 +133,7 @@ while True:
 
     if main_choice == 1:
         name = input("Enter your name: ")
-        phone = input("Enter your phone number: ")
+        phone = int(input("Enter your phone number: "))
         address = input("Enter your address: ")
         email = input("Enter your email: ")
         
@@ -119,9 +156,9 @@ while True:
                 acc_choice = int(input("Enter your choice: "))
 
                 if acc_choice == 1:
-                    account.deposit()
+                    account.deposit(bank)
                 elif acc_choice == 2:
-                    account.withdraw()
+                    account.withdraw(bank)
                 elif acc_choice == 3:
                     customer.AccountDetails(bank)
                 elif acc_choice == 4:
