@@ -78,7 +78,7 @@ class Account:
     def __init__(self, AccountNumber, Balance):
         self.AccountNumber = AccountNumber
         self.Balance = Balance
-        self.Transactions = []  # Store transaction history
+        self.Transactions = {'Account Number':None , 'Date & Time':None ,'Transaction Type':None ,'Amount':None }  # Store transaction history
 
     # Deposit function
     def deposit(self, bank: PyBank):
@@ -89,7 +89,12 @@ class Account:
                 return
             
             self.Balance += AMOUNT
-            self.Transactions.append(f'{datetime.now()} :: {self.AccountNumber} --- Deposited: {AMOUNT}')
+            # Transaction being stored in the dictonary 
+            self.Transactions['Account Number'] = self.AccountNumber
+            self.Transactions['Date & Time'] = datetime.now().replace(microsecond=0)
+            self.Transactions['Transaction Type'] = self.deposit.__name__
+            self.Transactions['Amount'] = AMOUNT
+
             bank.SaveAccountsToCSV()  # Save changes
             print(f' Amount Deposited! --- New Balance: {self.Balance}')
         except ValueError:
@@ -107,7 +112,13 @@ class Account:
                 return
 
             self.Balance -= AMOUNT
-            self.Transactions.append(f'{datetime.now()} :: {self.AccountNumber} --- Withdrawn: {AMOUNT}')
+
+            # Transaction being stored in the dictonary 
+            self.Transactions['Account Number'] = self.AccountNumber
+            self.Transactions['Date & Time'] = datetime.now().replace(microsecond=0)
+            self.Transactions['Transaction Type'] = self.deposit.__name__
+            self.Transactions['Amount'] = AMOUNT
+
             bank.SaveAccountsToCSV()  # Save changes
             print(f' Amount Withdrawn! --- New Balance: {self.Balance}')
         except ValueError:
@@ -118,8 +129,8 @@ class Account:
         if not self.Transactions:
             print("No transactions yet.")
         else:
-            for trans in self.Transactions:
-                print(trans)
+            for key , values in self.Transactions.items():
+                print(key , '---' , values)
 
 # ========== MAIN PROGRAM ==========
 bank = PyBank()
